@@ -143,6 +143,18 @@ function ___MODULE___.smashRandom(_rockAmount_, _minSize_, _maxSize_, _easingSty
 		local ___NEWROCK___                      = Instance.new('Part', ___Workspace___)
 		local ___ENDPOSITION___                  = (___OFFSETBASEPART___.CFrame * CFrame.Angles(0, math.rad(___STARTINGANGLE___), 0)) * CFrame.new(___OFFSETBASEPART___.CFrame.LookVector * _distance_)
 		
+		local ___RAYCAST___                      = Ray.new(___NEWROCK___.Position + Vector3.new(0, 2.5, 0), -Vector3.new(0, 10, 0))
+		local ___PART___, ___POS___              = ___Workspace___:FindPartOnRayWithIgnoreList(___RAYCAST___, {___NEWROCK___})
+
+		if not ___PART___ then
+
+			___NEWROCK___:Destroy()
+		elseif ___PART___ then
+
+			___NEWROCK___.Color              = ___PART___.Color
+			___NEWROCK___.Material           = ___PART___.Material
+		end
+		
 		___NEWROCK___.Anchored                   = true
 		___NEWROCK___.Transparency               = 1
 		___NEWROCK___.CFrame                     = CFrame.new(_startingPosition_ + -Vector3.new(0, -.75, 0))
@@ -153,10 +165,14 @@ function ___MODULE___.smashRandom(_rockAmount_, _minSize_, _maxSize_, _easingSty
 
 		spawn(function()
 			
+			repeat task.wait() until ___PART___
+			___NEWROCK___.Transparency       = 0
+			
 			___RunService___.Heartbeat:Connect(function()
 				
 				local ___VERIFY___                   = Ray.new(___NEWROCK___.Position + Vector3.new(0, 2.5, 0), -Vector3.new(0, 10, 0))
 				local ___VERIFYPART___, VERIFYPOS___ = ___Workspace___:FindPartOnRayWithIgnoreList(___VERIFY___, {___NEWROCK___})
+				
 				if not ___VERIFYPART___ then
 
 					___NEWROCK___:Destroy()
@@ -166,20 +182,19 @@ function ___MODULE___.smashRandom(_rockAmount_, _minSize_, _maxSize_, _easingSty
 					___NEWROCK___.Material           = ___VERIFYPART___.Material
 				end
 				
-				local ___NEWPOS___          = ___ENDPOSITION___.Position
-				local ___TIMECALC___        = (___OFFSETBASEPART___.Position - ___ENDPOSITION___.Position).Magnitude / _speed_
-
-				local ___TWEENINFO___       = TweenInfo.new(___TIMECALC___, _easingStyle_, Enum.EasingDirection.Out)
-				local ___TWEEN___           = ___TweenService___:Create(___NEWROCK___, ___TWEENINFO___, {Position = Vector3.new(___NEWPOS___.X, ___NEWPOS___.Y, ___NEWPOS___.Z) + Vector3.new(0, -2, 0)})
-				___TWEEN___:Play()
-				
 				___NEWROCK___.Orientation            = ___NEWROCK___.Orientation + Vector3.new(1.25, 3, 1.5)
-				___NEWROCK___.Transparency           = 0
+			end)
+			
+			local ___NEWPOS___          = ___ENDPOSITION___.Position
+			local ___TIMECALC___        = (___OFFSETBASEPART___.Position - ___ENDPOSITION___.Position).Magnitude / _speed_
 
-				delay(___TIMECALC___ - 0.25, function()
+			local ___TWEENINFO___       = TweenInfo.new(___TIMECALC___, _easingStyle_, Enum.EasingDirection.Out)
+			local ___TWEEN___           = ___TweenService___:Create(___NEWROCK___, ___TWEENINFO___, {Position = Vector3.new(___NEWPOS___.X, ___NEWPOS___.Y, ___NEWPOS___.Z) + Vector3.new(0, -2, 0)})
+			___TWEEN___:Play()
 
-					___NEWROCK___:Destroy()
-				end)
+			delay(_rockDelay_ - 0.25, function()
+
+				___NEWROCK___:Destroy()
 			end)
 		end)
 	end
