@@ -131,73 +131,135 @@ function ___MODULE___.createCircular(_cirlceAmount_, _rockAmount_, _rockAdd_, _r
 	end
 end
 
-function ___MODULE___.smashRandom(_rockAmount_, _minSize_, _maxSize_, _easingStyle_, _startingPosition_, _distance_, _speed_, _rockDelay_)
+function ___MODULE___.createSmash(_rockAmount_, _minSize_, _maxSize_, _easingStyle_, _startingPosition_, _distance_, _speed_, _rockDelay_)
 	
 	local ___STARTINGANGLE___    = 0
-	local ___OFFSETBASEPART___   = Instance.new('Part', workspace) ___OFFSETBASEPART___.Anchored = true ___OFFSETBASEPART___.CanCollide = false ___OFFSETBASEPART___.Transparency = 1 ___OFFSETBASEPART___.CFrame = CFrame.new(_startingPosition_)
+	local ___OFFSETBASEPART___   = Instance.new('Part', ___Workspace___) ___OFFSETBASEPART___.Name = 'VERIFY' ___OFFSETBASEPART___.Anchored = true ___OFFSETBASEPART___.CanCollide = false ___OFFSETBASEPART___.Transparency = 1 ___OFFSETBASEPART___.CFrame = CFrame.new(_startingPosition_)
 	local ___MAXDEGREES___       = 360
 	local ___SEPARATINGANGLE___  = ___MAXDEGREES___ / _rockAmount_
+	local ___STARTOFFSET___      = ___OFFSETBASEPART___.CFrame
 
 	for i=1, _rockAmount_ do
-
-		local ___NEWROCK___                      = Instance.new('Part', ___Workspace___)
-		local ___ENDPOSITION___                  = (___OFFSETBASEPART___.CFrame * CFrame.Angles(0, math.rad(___STARTINGANGLE___), 0)) * CFrame.new(___OFFSETBASEPART___.CFrame.LookVector * _distance_)
 		
-		local ___RAYCAST___                      = Ray.new(___NEWROCK___.Position + Vector3.new(0, 2.5, 0), -Vector3.new(0, 10, 0))
-		local ___PART___, ___POS___              = ___Workspace___:FindPartOnRayWithIgnoreList(___RAYCAST___, {___NEWROCK___})
-
-		if not ___PART___ then
-
-			___NEWROCK___:Destroy()
-		elseif ___PART___ then
-
-			___NEWROCK___.Color              = ___PART___.Color
-			___NEWROCK___.Material           = ___PART___.Material
-		end
+		___OFFSETBASEPART___.CFrame       = ___STARTOFFSET___
+		___OFFSETBASEPART___.CFrame       = ___OFFSETBASEPART___.CFrame * CFrame.Angles(0, math.rad(___STARTINGANGLE___), 0)
 		
-		___NEWROCK___.Anchored                   = true
-		___NEWROCK___.Transparency               = 1
-		___NEWROCK___.CFrame                     = CFrame.new(_startingPosition_ + -Vector3.new(0, -.75, 0))
-		___STARTINGANGLE___                      = ___STARTINGANGLE___ + ___SEPARATINGANGLE___
-
-		local ___ROCKSIZE___                     = math.random(_minSize_, _maxSize_)
-		___NEWROCK___.Size                       = Vector3.new(___ROCKSIZE___, ___ROCKSIZE___, ___ROCKSIZE___)
-
+		local ___NEWROCK___               = Instance.new('Part', ___Workspace___) ___NEWROCK___.Anchored = true ___NEWROCK___.CanCollide = false
+		local ___SIZE___                  = math.random(_minSize_, _maxSize_)
+		___NEWROCK___.Size                = Vector3.new(___SIZE___, ___SIZE___, ___SIZE___)
+		
+		local ___ORIENTATIONX___          = math.random(-360, 360)
+		local ___ORIENTATIONY___          = math.random(-360, 360)
+		local ___ORIENTATIONZ___          = math.random(-360, 360)
+		
+		local ___ENDPOSITION___           = ___OFFSETBASEPART___.CFrame * CFrame.new(___OFFSETBASEPART___.CFrame.LookVector * _distance_)
+		___NEWROCK___.CFrame              = ___OFFSETBASEPART___.CFrame
+		
+		___STARTINGANGLE___               = ___STARTINGANGLE___ + ___SEPARATINGANGLE___
+	
 		spawn(function()
-			
-			repeat task.wait() until ___PART___
-			___NEWROCK___.Transparency       = 0
 			
 			___RunService___.Heartbeat:Connect(function()
 				
+				___NEWROCK___.Orientation            = ___NEWROCK___.Orientation + Vector3.new(1, 1, 1)
+				
 				local ___VERIFY___                   = Ray.new(___NEWROCK___.Position + Vector3.new(0, 2.5, 0), -Vector3.new(0, 10, 0))
 				local ___VERIFYPART___, VERIFYPOS___ = ___Workspace___:FindPartOnRayWithIgnoreList(___VERIFY___, {___NEWROCK___})
-				
+
 				if not ___VERIFYPART___ then
 
 					___NEWROCK___:Destroy()
 				elseif ___VERIFYPART___ then
+					if ___VERIFYPART___.Name == 'VERIFY' then return end
 					
 					___NEWROCK___.Color              = ___VERIFYPART___.Color
 					___NEWROCK___.Material           = ___VERIFYPART___.Material
 				end
-				
-				___NEWROCK___.Orientation            = ___NEWROCK___.Orientation + Vector3.new(1.25, 3, 1.5)
 			end)
 			
-			local ___NEWPOS___          = ___ENDPOSITION___.Position
-			local ___TIMECALC___        = (___OFFSETBASEPART___.Position - ___ENDPOSITION___.Position).Magnitude / _speed_
-
-			local ___TWEENINFO___       = TweenInfo.new(___TIMECALC___, _easingStyle_, Enum.EasingDirection.Out)
-			local ___TWEEN___           = ___TweenService___:Create(___NEWROCK___, ___TWEENINFO___, {Position = Vector3.new(___NEWPOS___.X, ___NEWPOS___.Y, ___NEWPOS___.Z) + Vector3.new(0, -2, 0)})
+			local ___TIMECALC___                     = (_startingPosition_ - ___ENDPOSITION___.Position).Magnitude / _speed_
+			local ___TWEEN___                        = ___TweenService___:Create(___NEWROCK___, TweenInfo.new(___TIMECALC___), {Position = ___ENDPOSITION___.Position + -Vector3.new(0, 1.75, 0)})
 			___TWEEN___:Play()
-
-			delay(_rockDelay_ - 0.25, function()
-
+			
+			delay(___TIMECALC___ - .25, function()
+				
 				___NEWROCK___:Destroy()
 			end)
 		end)
 	end
+end
+
+function createRock(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, _distanceApart_, _easingStyle_)
+	
+	local ___NEWROCK___             = Instance.new('Part', ___Workspace___)
+	___NEWROCK___.Anchored          = true
+	___NEWROCK___.CanCollide        = false
+
+	local ___ORIENTATIONX___        = math.random(-360, 360)
+	local ___ORIENTATIONY___        = math.random(-360, 360)
+	local ___ORIENTATIONZ___        = math.random(-360, 360)
+
+	___NEWROCK___.Orientation       = Vector3.new(___ORIENTATIONX___, ___ORIENTATIONY___, ___ORIENTATIONZ___)
+
+	local ___SIZE___                = math.random(_minSize_, _maxSize_)
+	___NEWROCK___.Size              = Vector3.new(___SIZE___, ___SIZE___, ___SIZE___)
+
+	___NEWROCK___.CFrame            = ___STARTBASEPART___.Position + (___STARTBASEPART___.CFrame.LookVector *___STARTPOS___) + (___STARTBASEPART___.CFrame.RightVector *_distanceApart_)
+	___STARTPOS___                  = ___STARTPOS___ + ___ROCKDISTANCE___
+
+	local ___VERIFY___                   = Ray.new(___NEWROCK___.Position + Vector3.new(0, 2.5, 0), -Vector3.new(0, 10, 0))
+	local ___VERIFYPART___, VERIFYPOS___ = ___Workspace___:FindPartOnRayWithIgnoreList(___VERIFY___, {___NEWROCK___})
+
+	if not ___VERIFYPART___ then
+
+		___NEWROCK___:Destroy()
+	elseif ___VERIFYPART___ then
+
+		___NEWROCK___.Color              = ___VERIFYPART___.Color
+		___NEWROCK___.Material           = ___VERIFYPART___.Material
+	end
+	
+	local ___OLDPOSITION___              = ___NEWROCK___.Position
+	___NEWROCK___.Position               = ___OLDPOSITION___ + -Vector3.new(0, 5, 0)
+
+	local ___TWEENINFO___                = TweenInfo.new(.5, _easingStyle_, Enum.EasingDirection.Out)
+	local ___TWEEN___                    = ___TweenService___:Create(___NEWROCK___, ___TWEENINFO___, {Position = ___OLDPOSITION___})
+	___TWEEN___:Play() 
+	
+	___TWEEN___.Completed:Wait()
+	task.wait(2)
+	
+	local ___TWEENINFOEND___                = TweenInfo.new(1.25, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+	local ___TWEENEND___                    = ___TweenService___:Create(___NEWROCK___, ___TWEENINFOEND___, {Position = ___OLDPOSITION___ + -Vector3.new(0, 5, 0)})
+	___TWEENEND___:Play() 
+	
+	delay(1.25, function()
+		
+		___NEWROCK___:Destroy()
+	end)
+end
+
+function ___MODULE___.createLine(_rockAmount_, _minSize_, _maxSize_, _easingStyle_, _startingPosition_, _endPosition_, _distanceApart_, _rockInterval_)
+	
+	local ___MAGNITUDE___               = (_startingPosition_ - _endPosition_).Magnitude
+	local ___ROCKDISTANCE___            = ___MAGNITUDE___ / _rockAmount_
+	local ___STARTPOS___                = 0
+	
+	local ___STARTBASEPART___           = Instance.new('Part', workspace) ___STARTBASEPART___.CanCollide = false ___STARTBASEPART___.Anchored = true ___STARTBASEPART___.Transparency = 1
+	local ___ENDBASEPART___             = Instance.new('Part', workspace) ___ENDBASEPART___.CanCollide = false ___ENDBASEPART___.Anchored = true ___ENDBASEPART___.Transparency = 1
+	___ENDBASEPART___.CFrame            = CFrame.new(_endPosition_)
+	___STARTBASEPART___.CFrame          = CFrame.new(_startingPosition_, Vector3.new(___ENDBASEPART___.Position.X, ___STARTBASEPART___.Position.Y, ___ENDBASEPART___.Position.Z))
+	
+	for i=1, _rockAmount_ do
+		task.wait(_rockInterval_)
+		
+		___STARTPOS___                  = ___STARTPOS___ + ___ROCKDISTANCE___
+		coroutine.wrap(createRock)(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, _distanceApart_, _easingStyle_)
+		coroutine.wrap(createRock)(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, -_distanceApart_, _easingStyle_)
+	end
+	
+	___ENDBASEPART___:Destroy()
+	___STARTBASEPART___:Destroy()
 end
 
 return ___MODULE___
