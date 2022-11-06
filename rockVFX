@@ -189,7 +189,7 @@ function ___MODULE___.createSmash(_rockAmount_, _minSize_, _maxSize_, _easingSty
 	end
 end
 
-function createRock(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, _distanceApart_, _easingStyle_)
+function createRockNormal(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, _distanceApart_, _easingStyle_)
 	
 	local ___NEWROCK___             = Instance.new('Part', ___Workspace___)
 	___NEWROCK___.Anchored          = true
@@ -204,7 +204,7 @@ function createRock(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _min
 	local ___SIZE___                = math.random(_minSize_, _maxSize_)
 	___NEWROCK___.Size              = Vector3.new(___SIZE___, ___SIZE___, ___SIZE___)
 
-	___NEWROCK___.CFrame            = ___STARTBASEPART___.Position + (___STARTBASEPART___.CFrame.LookVector *___STARTPOS___) + (___STARTBASEPART___.CFrame.RightVector *_distanceApart_)
+	___NEWROCK___.Position          = ___STARTBASEPART___.Position + (___STARTBASEPART___.CFrame.LookVector *___STARTPOS___) + (___STARTBASEPART___.CFrame.RightVector *_distanceApart_)
 	___STARTPOS___                  = ___STARTPOS___ + ___ROCKDISTANCE___
 
 	local ___VERIFY___                   = Ray.new(___NEWROCK___.Position + Vector3.new(0, 2.5, 0), -Vector3.new(0, 10, 0))
@@ -254,10 +254,84 @@ function ___MODULE___.createLine(_rockAmount_, _minSize_, _maxSize_, _easingStyl
 		task.wait(_rockInterval_)
 		
 		___STARTPOS___                  = ___STARTPOS___ + ___ROCKDISTANCE___
-		coroutine.wrap(createRock)(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, _distanceApart_, _easingStyle_)
-		coroutine.wrap(createRock)(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, -_distanceApart_, _easingStyle_)
+		coroutine.wrap(createRockNormal)(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, _distanceApart_, _easingStyle_)
+		coroutine.wrap(createRockNormal)(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, -_distanceApart_, _easingStyle_)
 	end
 	
+	___ENDBASEPART___:Destroy()
+	___STARTBASEPART___:Destroy()
+end
+
+function createRockInward(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, _distanceApart_, _easingStyle_)
+
+	local ___NEWROCK___             = Instance.new('Part', ___Workspace___)
+	___NEWROCK___.Anchored          = true
+	___NEWROCK___.CanCollide        = false
+
+	local ___ORIENTATIONX___        = math.random(-360, 360)
+	local ___ORIENTATIONY___        = math.random(-360, 360)
+	local ___ORIENTATIONZ___        = math.random(-360, 360)
+
+	___NEWROCK___.Orientation       = Vector3.new(___ORIENTATIONX___, ___ORIENTATIONY___, ___ORIENTATIONZ___)
+
+	local ___SIZE___                = math.random(_minSize_, _maxSize_)
+	___NEWROCK___.Size              = Vector3.new(___SIZE___, ___SIZE___, ___SIZE___)
+
+	___NEWROCK___.Position          = ___STARTBASEPART___.Position + (___STARTBASEPART___.CFrame.LookVector *___STARTPOS___) + (___STARTBASEPART___.CFrame.RightVector *_distanceApart_)
+	___STARTPOS___                  = ___STARTPOS___ + ___ROCKDISTANCE___
+
+	local ___VERIFY___                   = Ray.new(___NEWROCK___.Position + Vector3.new(0, 2.5, 0), -Vector3.new(0, 10, 0))
+	local ___VERIFYPART___, VERIFYPOS___ = ___Workspace___:FindPartOnRayWithIgnoreList(___VERIFY___, {___NEWROCK___})
+
+	if not ___VERIFYPART___ then
+
+		___NEWROCK___:Destroy()
+	elseif ___VERIFYPART___ then
+
+		___NEWROCK___.Color              = ___VERIFYPART___.Color
+		___NEWROCK___.Material           = ___VERIFYPART___.Material
+	end
+
+	local ___OLDPOSITION___              = ___NEWROCK___.Position
+	local ___GOAL___                     = ___STARTBASEPART___.Position + (___STARTBASEPART___.CFrame.LookVector *___STARTPOS___/2) + Vector3.new(0, 5, 0)
+	___NEWROCK___.CFrame                 = CFrame.new(___OLDPOSITION___, Vector3.new(___GOAL___.X, ___GOAL___.Y, ___GOAL___.Z))
+
+	local ___TWEENINFO____               = TweenInfo.new(.5, _easingStyle_, Enum.EasingDirection.Out)
+	local ___TWEEN___                    = ___TweenService___:Create(___NEWROCK___, ___TWEENINFO____, {Position = ___OLDPOSITION___})
+	___TWEEN___:Play() 
+
+	___TWEEN___.Completed:Wait()
+	task.wait(1)
+
+	local ___TWEENINFOEND___             = TweenInfo.new(1.25, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+	local ___TWEENEND___                 = ___TweenService___:Create(___NEWROCK___, ___TWEENINFOEND___, {Position = ___OLDPOSITION___ + -Vector3.new(0, 5, 0)})
+	___TWEENEND___:Play() 
+
+	delay(1.25, function()
+
+		___NEWROCK___:Destroy()
+	end)
+end
+
+function ___MODULE___.createInwardLine(_rockAmount_, _minSize_, _maxSize_, _easingStyle_, _startingPosition_, _endPosition_, _distanceApart_, _rockInterval_)
+
+	local ___MAGNITUDE___               = (_startingPosition_ - _endPosition_).Magnitude
+	local ___ROCKDISTANCE___            = ___MAGNITUDE___ / _rockAmount_
+	local ___STARTPOS___                = 0
+
+	local ___STARTBASEPART___           = Instance.new('Part', workspace) ___STARTBASEPART___.CanCollide = false ___STARTBASEPART___.Anchored = true ___STARTBASEPART___.Transparency = 1
+	local ___ENDBASEPART___             = Instance.new('Part', workspace) ___ENDBASEPART___.CanCollide = false ___ENDBASEPART___.Anchored = true ___ENDBASEPART___.Transparency = 1
+	___ENDBASEPART___.CFrame            = CFrame.new(_endPosition_)
+	___STARTBASEPART___.CFrame          = CFrame.new(_startingPosition_, Vector3.new(___ENDBASEPART___.Position.X, ___STARTBASEPART___.Position.Y, ___ENDBASEPART___.Position.Z))
+
+	for i=1, _rockAmount_ do
+		task.wait(_rockInterval_)
+
+		___STARTPOS___                  = ___STARTPOS___ + ___ROCKDISTANCE___
+		coroutine.wrap(createRockInward)(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, _distanceApart_, _easingStyle_)
+		coroutine.wrap(createRockInward)(___STARTBASEPART___, ___ENDBASEPART___, ___STARTPOS___, _minSize_, _maxSize_, _startingPosition_, _endPosition_, ___ROCKDISTANCE___, -_distanceApart_, _easingStyle_)
+	end
+
 	___ENDBASEPART___:Destroy()
 	___STARTBASEPART___:Destroy()
 end
